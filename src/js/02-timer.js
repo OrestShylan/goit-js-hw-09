@@ -2,6 +2,7 @@
 import flatpickr from 'flatpickr';
 // Додатковий імпорт стилів
 import 'flatpickr/dist/flatpickr.min.css';
+import 'flatpickr/dist/themes/confetti.css';
 
 const refs = {
   input: document.querySelector('#datetime-picker'),
@@ -13,15 +14,59 @@ const refs = {
   timer: document.querySelector('.timer'),
   value: document.querySelector('.value'),
 };
+
+refs.btnStart.addEventListener('click', clickStart);
+
+let timerId = null;
+
 const options = {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
-    console.log(selectedDates[0]);
+    const date = selectedDates[0].getTime();
+    const currentDate = Date.now();
+    if (currentDate > date) {
+      alert('Please choose a date in the future');
+      return;
+    }
+    refs.btnStart.disabled = false;
   },
 };
+
+const selectDate = flatpickr(refs.input, options);
+refs.btnStart.disabled = true;
+
+function clickStart(evt) {
+  const startDate = selectDate.selectedDates[0];
+
+  timerId = setInterval(() => {
+    const dateCurrent = Date.now();
+    const anotherDate = startDate - dateCurrent;
+    refs.btnStart.disabled = true;
+    refs.input.disabled = true;
+
+    if (anotherDate < 0) {
+      clearInterval(timerId);
+      alert('Your time is up');
+      refs.btnStart.disabled = false;
+      refs.input.disabled = false;
+
+      return;
+    }
+
+    const time = convertMs(anotherDate);
+
+    updateTimer(time);
+  }, 1000);
+}
+
+//!==============================================================================================
+function addLeadingZero(value) {
+  return String(value).padStart(2, '0');
+}
+
 function convertMs(ms) {
   // Number of milliseconds per unit of time
   const second = 1000;
